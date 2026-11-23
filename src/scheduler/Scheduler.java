@@ -1,4 +1,11 @@
 package scheduler;
 
-public class Scheduler {
+import model.Process;
+import model.ScheduleResult;
+import java.util.List;
+
+public interface Scheduler {
+
+    ScheduleResult run(List<Process> processes, int contextSwitch);
+
 }
