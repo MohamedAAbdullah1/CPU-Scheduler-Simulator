@@ -1,3 +1,4 @@
+
 package model;
 
 import java.util.ArrayList;
@@ -7,6 +8,7 @@ public class ScheduleResult {
 
     private List<GanttSegment> ganttChart;
     private List<Process> processes;
+    private List<Process> demotedProcesses;
 
     private double averageWaitingTime;
     private double averageTurnaroundTime;
@@ -15,6 +17,7 @@ public class ScheduleResult {
     public ScheduleResult() {
         ganttChart = new ArrayList<>();
         processes = new ArrayList<>();
+        demotedProcesses = new ArrayList<>();
     }
 
     // Getters
@@ -25,6 +28,10 @@ public class ScheduleResult {
 
     public List<Process> getProcesses() {
         return processes;
+    }
+
+    public List<Process> getDemotedProcesses() {
+        return demotedProcesses;
     }
 
     public double getAverageWaitingTime() {

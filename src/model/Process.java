@@ -8,6 +8,7 @@ public class Process {
     private int priority;
     private int startTime = -1;   // start time in CPU
     private int completionTime = -1;      // finish time
+
     // attributes for ACS
     private int effectivePriority;
     private int tier2EntryTime = -1;    // when enter tier 2
@@ -21,6 +22,8 @@ public class Process {
         this.priority = priority;
         this.effectivePriority = priority;
     }
+
+
     // getters 
     public String getId(){return id;}
     public int getArrivalTime(){return arrivalTime;}
@@ -28,7 +31,7 @@ public class Process {
     public int getRemainingTime(){return remainingTime;}
     public int getPriority(){return priority;}
     public int getStartTime(){return startTime;}
-    public int getFinishTime(){return completionTime;}
+    public int getCompletionTime(){return completionTime;}
     public int getEffectivePriority(){return effectivePriority;}
     public int getTier2EntryTime(){return tier2EntryTime;}
     public int getTier(){return tier;}
@@ -41,6 +44,8 @@ public class Process {
     public int getResponseTime(){
     return startTime - arrivalTime;
     }
+
+
     // setters 
     public void setTier(int tier){
         this.tier = tier;
@@ -62,10 +67,20 @@ public class Process {
     public void setCompletionTime(int completionTime){
         this.completionTime = completionTime;
     }
+
     // exceute
     public void execute(){
         if(remainingTime > 0) remainingTime--;
     }
+
     // is finish
     public boolean isFinished() {return remainingTime == 0;}
+
+    //change to tier 2
+    public void enterTier2(int time) {
+        this.tier = 2;
+        this.tier2EntryTime = time;
+        this.effectivePriority = priority;
+    }
+
 }
