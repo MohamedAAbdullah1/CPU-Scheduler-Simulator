@@ -67,4 +67,7 @@ public class ScheduleResult {
     public void setAverageResponseTime(double averageResponseTime) {
         this.averageResponseTime = averageResponseTime;
     }
+    public void setDemotedProcesses(List<Process> demotedProcesses) {
+        this.demotedProcesses = demotedProcesses;
+    }
 }
