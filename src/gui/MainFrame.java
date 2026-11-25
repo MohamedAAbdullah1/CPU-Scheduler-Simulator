@@ -9,7 +9,6 @@ import javax.swing.border.AbstractBorder;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 
-/** The main window: header on top, input on the left, one tab per scheduler on the right. */
 public class MainFrame extends JFrame {
 
     // ---------------- shared theme ----------------
@@ -23,7 +22,6 @@ public class MainFrame extends JFrame {
     static final Font FONT = new Font("SansSerif", Font.PLAIN, 13);
     static final Font BOLD = FONT.deriveFont(Font.BOLD);
 
-    /** A white rounded card with an optional title. */
     static JPanel card(String title, JComponent body) {
         JPanel p = new JPanel(new BorderLayout(0, 8));
         p.setBackground(CARD);
@@ -70,7 +68,6 @@ public class MainFrame extends JFrame {
         return b;
     }
 
-    /** Rounded light-grey outline used by the cards. */
     static class RoundBorder extends AbstractBorder {
         @Override
         public void paintBorder(Component c, Graphics g0, int x, int y, int w, int h) {
@@ -98,7 +95,7 @@ public class MainFrame extends JFrame {
             for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels())
                 if (info.getName().equals("Nimbus")) UIManager.setLookAndFeel(info.getClassName());
         } catch (Exception ignored) {
-            // keep the default look if Nimbus is not available
+
         }
     }
 

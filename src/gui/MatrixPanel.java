@@ -13,11 +13,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.StringJoiner;
 
-/**
- * Shows the Time | Process | Tier matrix in a table.
- * The static methods build the matrix rows from a ScheduleResult;
- * Main uses them too, to print the same matrix in the console.
- */
 public class MatrixPanel extends JPanel {
 
     private final DefaultTableModel model = new DefaultTableModel(new String[]{"Time", "Process", "Tiers & events"}, 0) {
@@ -34,14 +29,13 @@ public class MatrixPanel extends JPanel {
         table.setRowHeight(24);
         table.setShowHorizontalLines(false);
         table.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF); // long Tier lines scroll sideways instead of "..."
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         table.getColumnModel().getColumn(0).setPreferredWidth(50);
         table.getColumnModel().getColumn(1).setPreferredWidth(70);
         table.setDefaultRenderer(Object.class, new LineRenderer());
         add(MainFrame.scroll(table));
     }
 
-    /** Colors each line by what it says, and shades every other time step so they are easy to tell apart. */
     private class LineRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable t, Object value, boolean selected, boolean focus, int row, int col) {
@@ -52,7 +46,6 @@ public class MatrixPanel extends JPanel {
             setFont(col < 2 && !text.isEmpty() ? MainFrame.BOLD : t.getFont());
             if (selected) return this;
 
-            // find the time step this row belongs to
             int step = row;
             while (step > 0 && model.getValueAt(step, 0).toString().isEmpty()) step--;
             boolean cs = model.getValueAt(step, 1).equals("CS");
@@ -86,7 +79,6 @@ public class MatrixPanel extends JPanel {
 
     // ---------------- building the matrix ----------------
 
-    // cpu[t] = what runs from t to t+1 (process name, CS or Idle)
     public static String[] timeline(ScheduleResult r) {
         int end = 0;
         for (Process p : r.getProcesses()) end = Math.max(end, p.getCompletionTime());
@@ -105,13 +97,11 @@ public class MatrixPanel extends JPanel {
         return p.getBurstTime() - used;
     }
 
-    // the time the scheduler picked a process (before its context switch)
     static int picked(int start, String[] cpu) {
         while (start > 0 && cpu[start - 1].equals("CS")) start--;
         return start;
     }
 
-    /** SJF: one row per time unit with the running process. */
     public static List<String[]> sjfRows(ScheduleResult r) {
         String[] cpu = timeline(r);
         List<String[]> rows = new ArrayList<>();
@@ -120,7 +110,6 @@ public class MatrixPanel extends JPanel {
         return rows;
     }
 
-    /** ACS: one row per line; the time and process are only on the first line of each time step. */
     public static List<String[]> acsRows(ScheduleResult r, int q, int aging) {
         String[] cpu = timeline(r);
         List<Process> ps = r.getProcesses();
@@ -149,7 +138,7 @@ public class MatrixPanel extends JPanel {
                 if (running.equals("CS")) {
                     int j = t;
                     while (cpu[j].equals("CS")) j++;
-                    boolean saves = false; // previous process is not finished yet
+                    boolean saves = false;
                     for (Process p : ps) if (t > 0 && p.getId().equals(cpu[t - 1]) && p.getCompletionTime() > t) saves = true;
                     lines.add("Context switch " + (saves ? "saves " + cpu[t - 1] + " and " : "") + "loads " + cpu[j]);
                 }
