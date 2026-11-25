@@ -7,6 +7,7 @@ public class AgingManager {
 
     private final int agingInterval;
 
+    // Improving priority by passing time
     public AgingManager(int agingInterval) {
         this.agingInterval = Math.max(1, agingInterval); // to prevent 0 and negative values
     }
