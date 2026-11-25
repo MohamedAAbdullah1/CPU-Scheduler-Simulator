@@ -9,7 +9,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Editable table where the user types the processes. */
 public class ProcessTablePanel extends JPanel {
 
     private final DefaultTableModel model = new DefaultTableModel(new String[]{"Name", "Arrival", "Burst", "Priority"}, 0);
@@ -46,7 +45,6 @@ public class ProcessTablePanel extends JPanel {
         add(buttons, BorderLayout.SOUTH);
     }
 
-    /** Fresh Process objects from the table (each scheduler needs its own copy). */
     public List<Process> getProcesses() {
         if (table.isEditing()) table.getCellEditor().stopCellEditing();
         if (model.getRowCount() == 0) throw new IllegalArgumentException("Add at least one process.");

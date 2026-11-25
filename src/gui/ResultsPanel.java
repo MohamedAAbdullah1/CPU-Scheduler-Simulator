@@ -8,7 +8,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 
-/** Average stat cards and the per-process results table. */
 public class ResultsPanel extends JPanel {
 
     private final DefaultTableModel model = new DefaultTableModel(

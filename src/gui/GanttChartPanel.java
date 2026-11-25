@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
-/** Draws the Gantt chart: one rounded bar per segment, times under it and a legend. */
 public class GanttChartPanel extends JPanel {
 
     private static final Color[] COLORS = {
@@ -18,7 +17,7 @@ public class GanttChartPanel extends JPanel {
     private static final Color CS_COLOR = new Color(0x94A3B8);
 
     private List<GanttSegment> segments = new ArrayList<>();
-    private List<String> ids = new ArrayList<>(); // sorted ids, so a process has the same color in both tabs
+    private List<String> ids = new ArrayList<>();
 
     public GanttChartPanel() {
         setPreferredSize(new Dimension(800, 95));
@@ -81,7 +80,6 @@ public class GanttChartPanel extends JPanel {
         }
         drawTime(g, end, left + (int) Math.round(end * unit) - 2, top + height + 16, lastLabelX);
 
-        // legend
         g.setFont(MainFrame.FONT);
         int lx = left, ly = top + height + 40;
         for (String id : ids) lx = legendItem(g, colorFor(id), id, lx, ly);
@@ -93,7 +91,7 @@ public class GanttChartPanel extends JPanel {
         g.setColor(MainFrame.MUTED);
         String t = "" + time;
         int tx = x - g.getFontMetrics().stringWidth(t) / 2;
-        if (tx - lastX < 6) return lastX; // skip labels that would overlap
+        if (tx - lastX < 6) return lastX;
         g.drawString(t, Math.max(tx, 0), y);
         g.setFont(MainFrame.BOLD);
         return tx + g.getFontMetrics().stringWidth(t);

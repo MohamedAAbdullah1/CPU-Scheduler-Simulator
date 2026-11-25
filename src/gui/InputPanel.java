@@ -3,7 +3,6 @@ package gui;
 import javax.swing.*;
 import java.awt.*;
 
-/** Left side of the window: the process table, Q, CS, aging interval and the Run button. */
 public class InputPanel extends JPanel {
 
     private final ProcessTablePanel processTable = new ProcessTablePanel();
