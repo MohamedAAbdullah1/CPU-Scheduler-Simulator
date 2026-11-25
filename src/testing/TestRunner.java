@@ -2,632 +2,241 @@
 package testing;
 
 import scheduler.ACSScheduler;
-
 import model.Process;
 import model.GanttSegment;
 import model.ScheduleResult;
+import metrics.MetricsCalculator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestRunner {
 
-    private static int passed = 0;
-    private static int failed = 0;
+    private static final int AGING_INTERVAL = 4;
 
     public static void main(String[] args) {
 
-        System.out.println("======================================");
-        System.out.println("          ACS TEST RUNNER");
-        System.out.println("======================================");
+        // Assignment Test Case 1
+        runTest(
+                "TEST CASE 1",
+                3,  // Quantum
+                0,  // Context Switching
+                new Process("P1", 0, 4, 2),
+                new Process("P2", 1, 7, 3),
+                new Process("P3", 3, 2, 1)
+        );
 
-        runTestCase1();
-        runTestCase2();
-
-        runTest3_ArrivalDuringTier2();
-        runTest4_ArrivalDuringContextSwitch();
-        runTest5_SameEffectivePriority();
-        runTest6_IdleTime();
-
-        // Final Summary
-        System.out.println("\n======================================");
-        System.out.println("             TEST SUMMARY");
-        System.out.println("======================================");
-
-        System.out.println("Passed: " + passed);
-        System.out.println("Failed: " + failed);
-        System.out.println("Total : " + (passed + failed));
-
-        if (failed == 0) {
-            System.out.println("\nALL TESTS PASSED!");
-        } else {
-            System.out.println("\nSOME TESTS FAILED!");
-        }
+        // Assignment Test Case 2
+        runTest(
+                "TEST CASE 2",
+                3,  // Quantum
+                1,  // Context Switching
+                new Process("P1", 0, 5, 4),
+                new Process("P2", 1, 6, 2),
+                new Process("P3", 4, 4, 3)
+        );
     }
 
-    // ==========================================
-    // TEST CASE 1
-    // ==========================================
-
-    private static void runTestCase1() {
-
-        List<Process> processes = new ArrayList<>();
-
-        processes.add(new Process("P1", 0, 4, 2));
-        processes.add(new Process("P2", 1, 7, 3));
-        processes.add(new Process("P3", 3, 2, 1));
-
-        // Q = 3, CS = 0, Aging Interval = 4
-        ACSScheduler scheduler = new ACSScheduler(3, 4);
-
-        ScheduleResult result = scheduler.run(processes, 0);
-
-        System.out.println("\n========== TEST CASE 1 ==========");
-
-        printResult(result);
-
-        String[] types = {
-                "PROCESS",
-                "PROCESS",
-                "PROCESS",
-                "PROCESS",
-                "PROCESS"
-        };
-
-        String[] ids = {
-                "P1", "P2", "P3", "P1", "P2"
-        };
-
-        int[] starts = {0, 3, 6, 8, 9};
-        int[] ends = {3, 6, 8, 9, 13};
-
-        boolean valid = validateExpectedGantt(
-                result, types, ids, starts, ends
-        );
-
-        valid &= validateCompletionTimes(
-                result,
-                Map.of("P1", 9, "P2", 13, "P3", 8)
-        );
-
-        valid &= validateMetrics(
-                result, 4.333333, 8.666667, 1.666667
-        );
-
-        recordResult("Test Case 1", valid);
-    }
-
-    // ==========================================
-    // TEST CASE 2
-    // ==========================================
-
-    private static void runTestCase2() {
-
-        List<Process> processes = new ArrayList<>();
-
-        processes.add(new Process("P1", 0, 5, 4));
-        processes.add(new Process("P2", 1, 6, 2));
-        processes.add(new Process("P3", 4, 4, 3));
-
-        // Q = 3, CS = 1, Aging Interval = 4
-        ACSScheduler scheduler = new ACSScheduler(3, 4);
-
-        ScheduleResult result = scheduler.run(processes, 1);
-
-        System.out.println("\n========== TEST CASE 2 ==========");
-
-        printResult(result);
-
-        String[] types = {
-                "PROCESS",
-                "CONTEXT_SWITCH",
-                "PROCESS",
-                "CONTEXT_SWITCH",
-                "PROCESS",
-                "CONTEXT_SWITCH",
-                "PROCESS",
-                "CONTEXT_SWITCH",
-                "PROCESS",
-                "CONTEXT_SWITCH",
-                "PROCESS"
-        };
-
-        String[] ids = {
-                "P1",
-                null,
-                "P2",
-                null,
-                "P3",
-                null,
-                "P2",
-                null,
-                "P1",
-                null,
-                "P3"
-        };
-
-        int[] starts = {
-                0, 3, 4, 7, 8, 11, 12, 15, 16, 18, 19
-        };
-
-        int[] ends = {
-                3, 4, 7, 8, 11, 12, 15, 16, 18, 19, 20
-        };
-
-        boolean valid = validateExpectedGantt(
-                result, types, ids, starts, ends
-        );
-
-        valid &= validateCompletionTimes(
-                result,
-                Map.of("P1", 18, "P2", 15, "P3", 20)
-        );
-
-        valid &= validateMetrics(
-                result, 11.0, 16.0, 2.333333
-        );
-
-        recordResult("Test Case 2", valid);
-    }
-
-    // ==========================================
-    // TEST 3: ARRIVAL DURING TIER 2
-    // ==========================================
-
-    private static void runTest3_ArrivalDuringTier2() {
-
-        List<Process> processes = new ArrayList<>();
-
-        processes.add(new Process("P1", 0, 4, 2));
-        processes.add(new Process("P2", 3, 1, 1));
-
-        // Q = 2, CS = 0
-        ACSScheduler scheduler = new ACSScheduler(2, 4);
-
-        ScheduleResult result = scheduler.run(processes, 0);
-
-        System.out.println(
-                "\n========== TEST 3: ARRIVAL DURING TIER 2 =========="
-        );
-
-        printResult(result);
-
-        String[] types = {
-                "PROCESS",
-                "PROCESS"
-        };
-
-        String[] ids = {
-                "P1",
-                "P2"
-        };
-
-        int[] starts = {0, 4};
-        int[] ends = {4, 5};
-
-        boolean valid = validateExpectedGantt(
-                result, types, ids, starts, ends
-        );
-
-        valid &= validateCompletionTimes(
-                result,
-                Map.of("P1", 4, "P2", 5)
-        );
-
-        recordResult("Test 3 - Arrival During Tier 2", valid);
-    }
-
-    // ==========================================
-    // TEST 4: ARRIVAL DURING CONTEXT SWITCH
-    // ==========================================
-
-    private static void runTest4_ArrivalDuringContextSwitch() {
-
-        List<Process> processes = new ArrayList<>();
-
-        processes.add(new Process("P1", 0, 4, 2));
-        processes.add(new Process("P2", 0, 2, 3));
-        processes.add(new Process("P3", 7, 1, 1));
-
-        // Q = 2, CS = 2
-        ACSScheduler scheduler = new ACSScheduler(2, 4);
-
-        ScheduleResult result = scheduler.run(processes, 2);
-
-        System.out.println(
-                "\n========== TEST 4: ARRIVAL DURING CONTEXT SWITCH =========="
-        );
-
-        printResult(result);
-
-        String[] types = {
-                "PROCESS",
-                "CONTEXT_SWITCH",
-                "PROCESS",
-                "CONTEXT_SWITCH",
-                "PROCESS",
-                "CONTEXT_SWITCH",
-                "PROCESS"
-        };
-
-        String[] ids = {
-                "P1",
-                null,
-                "P2",
-                null,
-                "P3",
-                null,
-                "P1"
-        };
-
-        int[] starts = {
-                0, 2, 4, 6, 8, 9, 11
-        };
-
-        int[] ends = {
-                2, 4, 6, 8, 9, 11, 13
-        };
-
-        boolean valid = validateExpectedGantt(
-                result, types, ids, starts, ends
-        );
-
-        valid &= validateCompletionTimes(
-                result,
-                Map.of("P1", 13, "P2", 6, "P3", 9)
-        );
-
-        recordResult("Test 4 - Arrival During Context Switch", valid);
-    }
-
-    // ==========================================
-    // TEST 5: SAME EFFECTIVE PRIORITY
-    // ==========================================
-
-    private static void runTest5_SameEffectivePriority() {
-
-        List<Process> processes = new ArrayList<>();
-
-        processes.add(new Process("P1", 0, 4, 2));
-        processes.add(new Process("P2", 0, 4, 2));
-
-        // Q = 2, CS = 0, Aging Interval = 100
-        ACSScheduler scheduler = new ACSScheduler(2, 100);
-
-        ScheduleResult result = scheduler.run(processes, 0);
-
-        System.out.println(
-                "\n========== TEST 5: SAME EFFECTIVE PRIORITY =========="
-        );
-
-        printResult(result);
-
-        String[] types = {
-                "PROCESS",
-                "PROCESS",
-                "PROCESS",
-                "PROCESS"
-        };
-
-        String[] ids = {
-                "P1",
-                "P2",
-                "P1",
-                "P2"
-        };
-
-        int[] starts = {0, 2, 4, 6};
-        int[] ends = {2, 4, 6, 8};
-
-        boolean valid = validateExpectedGantt(
-                result, types, ids, starts, ends
-        );
-
-        valid &= validateCompletionTimes(
-                result,
-                Map.of("P1", 6, "P2", 8)
-        );
-
-        recordResult("Test 5 - Same Effective Priority", valid);
-    }
-
-    // ==========================================
-    // TEST 6: IDLE TIME
-    // ==========================================
-
-    private static void runTest6_IdleTime() {
-
-        List<Process> processes = new ArrayList<>();
-
-        processes.add(new Process("P1", 3, 1, 2));
-        processes.add(new Process("P2", 5, 1, 3));
-
-        // Q = 2, CS = 1
-        ACSScheduler scheduler = new ACSScheduler(2, 4);
-
-        ScheduleResult result = scheduler.run(processes, 1);
-
-        System.out.println(
-                "\n========== TEST 6: IDLE TIME =========="
-        );
-
-        printResult(result);
-
-        String[] types = {
-                "IDLE",
-                "PROCESS",
-                "IDLE",
-                "PROCESS"
-        };
-
-        String[] ids = {
-                null,
-                "P1",
-                null,
-                "P2"
-        };
-
-        int[] starts = {0, 3, 4, 5};
-        int[] ends = {3, 4, 5, 6};
-
-        boolean valid = validateExpectedGantt(
-                result, types, ids, starts, ends
-        );
-
-        valid &= validateCompletionTimes(
-                result,
-                Map.of("P1", 4, "P2", 6)
-        );
-
-        recordResult("Test 6 - Idle Time", valid);
-    }
-
-    // ==========================================
-    // PRINT RESULT
-    // ==========================================
-
-    private static void printResult(ScheduleResult result) {
+    // Run one complete ACS test case
+    private static void runTest(
+            String testName,
+            int quantum,
+            int contextSwitch,
+            Process... templates
+    ) {
+
+        System.out.println("\n============================================");
+        System.out.println("              " + testName);
+        System.out.println("============================================");
+
+        System.out.println("Quantum: " + quantum);
+        System.out.println("Context Switching: " + contextSwitch);
+        System.out.println("Aging Interval: " + AGING_INTERVAL);
+
+        // Create fresh processes
+        List<Process> processes = copyProcesses(templates);
+
+        // Create ACS scheduler
+        ACSScheduler scheduler =
+                new ACSScheduler(quantum, AGING_INTERVAL);
+
+        // Execute simulation
+        ScheduleResult result =
+                scheduler.run(processes, contextSwitch);
 
         if (result == null) {
-            System.out.println("Result is NULL!");
+            throw new IllegalStateException(
+                    "Scheduler returned null result"
+            );
+        }
+
+        // Print time-step timeline
+        printTimeSteps(result);
+
+        // Print process analysis
+        printProcessAnalysis(result);
+
+        System.out.println("\n========== TEST COMPLETED ==========");
+    }
+
+    // Create independent processes for each test
+    private static List<Process> copyProcesses(Process[] templates) {
+
+        List<Process> processes = new ArrayList<>();
+
+        for (Process p : templates) {
+
+            Process copy = new Process(
+                    p.getId(),
+                    p.getArrivalTime(),
+                    p.getBurstTime(),
+                    p.getPriority()
+            );
+
+            processes.add(copy);
+        }
+
+        return processes;
+    }
+
+    // Print one row for every time step
+    private static void printTimeSteps(ScheduleResult result) {
+
+        System.out.println("\n========== TIME STEP MATRIX ==========");
+
+        System.out.printf(
+                "%-8s | %-20s%n",
+                "Time",
+                "Process"
+        );
+
+        System.out.println("--------------------------------------");
+
+        List<GanttSegment> ganttChart = result.getGanttChart();
+
+        if (ganttChart == null || ganttChart.isEmpty()) {
+            System.out.println("No execution data.");
             return;
         }
 
-        System.out.println("\nGANTT CHART:");
+        // Find simulation finish time
+        int finishTime = 0;
 
-        for (GanttSegment segment : result.getGanttChart()) {
-
-            System.out.println(
-                    segment.getType()
-                            + " | Process: " + segment.getProcessId()
-                            + " | Start: " + segment.getStartTime()
-                            + " | End: " + segment.getEndTime()
+        for (GanttSegment segment : ganttChart) {
+            finishTime = Math.max(
+                    finishTime,
+                    segment.getEndTime()
             );
         }
 
-        System.out.println("\nPROCESS INFORMATION:");
+        // Print every time unit
+        for (int time = 0; time < finishTime; time++) {
 
-        for (Process p : result.getProcesses()) {
+            String processName = "UNRECORDED";
 
-            System.out.println(
-                    p.getId()
-                            + " | Arrival: " + p.getArrivalTime()
-                            + " | Burst: " + p.getBurstTime()
-                            + " | Start: " + p.getStartTime()
-                            + " | Completion: " + p.getCompletionTime()
-                            + " | Remaining: " + p.getRemainingTime()
-                            + " | Tier: " + p.getTier()
-                            + " | WT: " + p.getWaitingTime()
-                            + " | TAT: " + p.getTurnaroundTime()
-                            + " | RT: " + p.getResponseTime()
-            );
-        }
+            for (GanttSegment segment : ganttChart) {
 
-        System.out.println("\nDEMOTED PROCESSES:");
+                if (time >= segment.getStartTime()
+                        && time < segment.getEndTime()) {
 
-        for (Process p : result.getDemotedProcesses()) {
-            System.out.println(p.getId());
-        }
+                    if (segment.getType()
+                            == GanttSegment.SegmentType.PROCESS) {
 
-        System.out.println("\nAVERAGE METRICS:");
+                        processName = segment.getProcessId();
 
-        System.out.println(
-                "Average Waiting Time: "
-                        + result.getAverageWaitingTime()
-        );
+                    } else if (segment.getType()
+                            == GanttSegment.SegmentType.CONTEXT_SWITCH) {
 
-        System.out.println(
-                "Average Turnaround Time: "
-                        + result.getAverageTurnaroundTime()
-        );
+                        processName = "CONTEXT SWITCH";
 
-        System.out.println(
-                "Average Response Time: "
-                        + result.getAverageResponseTime()
-        );
-    }
+                    } else {
 
-    // ==========================================
-    // VALIDATE GANTT CHART
-    // ==========================================
+                        processName = "IDLE";
+                    }
 
-    private static boolean validateExpectedGantt(
-            ScheduleResult result,
-            String[] expectedTypes,
-            String[] expectedIds,
-            int[] expectedStarts,
-            int[] expectedEnds) {
-
-        if (result == null || result.getGanttChart() == null) {
-            System.out.println("Invalid ScheduleResult!");
-            return false;
-        }
-
-        List<GanttSegment> actual = result.getGanttChart();
-
-        if (actual.size() != expectedTypes.length) {
-
-            System.out.println(
-                    "Gantt segment count mismatch!"
-                            + " Expected: " + expectedTypes.length
-                            + " Actual: " + actual.size()
-            );
-
-            return false;
-        }
-
-        for (int i = 0; i < actual.size(); i++) {
-
-            GanttSegment segment = actual.get(i);
-
-            boolean correctType =
-                    expectedTypes[i].equals(
-                            segment.getType().toString()
-                    );
-
-            boolean correctId =
-                    Objects.equals(
-                            expectedIds[i],
-                            segment.getProcessId()
-                    );
-
-            boolean correctStart =
-                    expectedStarts[i] == segment.getStartTime();
-
-            boolean correctEnd =
-                    expectedEnds[i] == segment.getEndTime();
-
-            if (!correctType || !correctId
-                    || !correctStart || !correctEnd) {
-
-                System.out.println("\nMismatch at segment " + i);
-
-                System.out.println(
-                        "Expected: "
-                                + expectedTypes[i]
-                                + " | " + expectedIds[i]
-                                + " | " + expectedStarts[i]
-                                + "-" + expectedEnds[i]
-                );
-
-                System.out.println(
-                        "Actual: "
-                                + segment.getType()
-                                + " | " + segment.getProcessId()
-                                + " | " + segment.getStartTime()
-                                + "-" + segment.getEndTime()
-                );
-
-                return false;
+                    break;
+                }
             }
+
+            System.out.printf(
+                    "%-8d | %-20s%n",
+                    time,
+                    processName
+            );
         }
 
-        return true;
+        System.out.println("--------------------------------------");
+        System.out.println("Finish Time: " + finishTime);
     }
 
-    // ==========================================
-    // VALIDATE COMPLETION TIMES
-    // ==========================================
+    // Print individual and average metrics
+    private static void printProcessAnalysis(ScheduleResult result) {
 
-    private static boolean validateCompletionTimes(
-            ScheduleResult result,
-            Map<String, Integer> expectedCompletion) {
+        MetricsCalculator calculator =
+                new MetricsCalculator();
 
-        if (result == null || result.getProcesses() == null) {
-            return false;
-        }
+        List<Process> processes = result.getProcesses();
 
-        if (result.getProcesses().size() != expectedCompletion.size()) {
-            System.out.println("Process count mismatch!");
-            return false;
-        }
+        System.out.println("\n========== PROCESS ANALYSIS ==========");
 
-        for (Process p : result.getProcesses()) {
-
-            Integer expectedTime =
-                    expectedCompletion.get(p.getId());
-
-            if (expectedTime == null
-                    || p.getCompletionTime() != expectedTime) {
-
-                System.out.println(
-                        "Wrong completion time for " + p.getId()
-                                + " | Expected: " + expectedTime
-                                + " | Actual: " + p.getCompletionTime()
-                );
-
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    // ==========================================
-    // VALIDATE AVERAGE METRICS
-    // ==========================================
-
-    private static boolean validateMetrics(
-            ScheduleResult result,
-            double expectedWT,
-            double expectedTAT,
-            double expectedRT) {
-
-        if (result == null) {
-            return false;
-        }
-
-        boolean wtCorrect = closeEnough(
-                result.getAverageWaitingTime(), expectedWT
+        System.out.printf(
+                "%-8s | %-8s | %-8s | %-8s | %-8s | %-8s%n",
+                "Process",
+                "Arrival",
+                "Finish",
+                "TAT",
+                "WT",
+                "RT"
         );
 
-        boolean tatCorrect = closeEnough(
-                result.getAverageTurnaroundTime(), expectedTAT
+        System.out.println(
+                "---------------------------------------------------------------"
         );
 
-        boolean rtCorrect = closeEnough(
-                result.getAverageResponseTime(), expectedRT
+        for (Process p : processes) {
+
+            int finishTime =
+                    p.getArrivalTime() + calculator.calculateTAT(p);
+
+            System.out.printf(
+                    "%-8s | %-8d | %-8d | %-8d | %-8d | %-8d%n",
+                    p.getId(),
+                    p.getArrivalTime(),
+                    finishTime,
+                    calculator.calculateTAT(p),
+                    calculator.calculateWT(p),
+                    calculator.calculateRT(p)
+            );
+        }
+
+        // Calculate averages independently
+        double avgWT = calculator.calculateAverageWT(processes);
+        double avgTAT = calculator.calculateAverageTAT(processes);
+        double avgRT = calculator.calculateAverageRT(processes);
+
+        System.out.println(
+                "\nAverage Waiting Time: " + String.format("%.2f", avgWT)
         );
 
-        if (!wtCorrect) {
-            System.out.println("Average WT mismatch!");
-        }
+        System.out.println(
+                "Average Turnaround Time: " + String.format("%.2f", avgTAT)
+        );
 
-        if (!tatCorrect) {
-            System.out.println("Average TAT mismatch!");
-        }
+        System.out.println(
+                "Average Response Time: " + String.format("%.2f", avgRT)
+        );
 
-        if (!rtCorrect) {
-            System.out.println("Average RT mismatch!");
-        }
+        // Compare calculated metrics with scheduler results
+        double epsilon = 0.000001;
 
-        return wtCorrect && tatCorrect && rtCorrect;
-    }
+        boolean valid =
+                Math.abs(result.getAverageWaitingTime() - avgWT) < epsilon
+                        && Math.abs(result.getAverageTurnaroundTime() - avgTAT) < epsilon
+                        && Math.abs(result.getAverageResponseTime() - avgRT) < epsilon;
 
-    // ==========================================
-    // DOUBLE COMPARISON
-    // ==========================================
-
-    private static boolean closeEnough(
-            double actual,
-            double expected) {
-
-        return Math.abs(actual - expected) < 0.01;
-    }
-
-    // ==========================================
-    // RECORD TEST RESULT
-    // ==========================================
-
-    private static void recordResult(
-            String name,
-            boolean valid) {
-
-        if (valid) {
-            passed++;
-            System.out.println("\n" + name + ": PASS");
-        } else {
-            failed++;
-            System.out.println("\n" + name + ": FAIL");
-        }
+        System.out.println(
+                "\nMetrics Validation: " +
+                        (valid ? "PASS" : "FAIL")
+        );
     }
 }
