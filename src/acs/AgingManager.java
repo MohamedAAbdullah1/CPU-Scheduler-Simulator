@@ -1,3 +1,4 @@
+
 package acs;
 
 import java.util.List;
@@ -7,25 +8,32 @@ public class AgingManager {
 
     private final int agingInterval;
 
-    // Improving priority by passing time
     public AgingManager(int agingInterval) {
-        this.agingInterval = Math.max(1, agingInterval); // to prevent 0 and negative values
+        if (agingInterval <= 0) {
+            throw new IllegalArgumentException(
+                    "agingInterval must be greater than 0");
+        }
+
+        this.agingInterval = agingInterval;
     }
 
     public void applyAging(List<Process> waitingProcesses, int currentTime) {
-        if (waitingProcesses == null)
+        if (waitingProcesses == null) {
             return;
+        }
+
         for (Process process : waitingProcesses) {
             updateEffectivePriority(process, currentTime);
         }
     }
 
     public void updateEffectivePriority(Process process, int currentTime) {
-        if (process == null || process.isFinished())
+        if (process == null || process.isFinished()
+                || process.getTier2EntryTime() < 0
+                || currentTime < process.getTier2EntryTime()) {
             return;
-        if (process.getTier2EntryTime() < 0 || currentTime < process.getTier2EntryTime())
-            return;
+        }
+
         process.updateEffectivePriority(currentTime, agingInterval);
     }
-
 }
