@@ -6,7 +6,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
-/** Everything shown for one scheduler: Gantt chart, matrix and results. */
 public class SimulationPanel extends JPanel {
 
     private final GanttChartPanel gantt = new GanttChartPanel();
